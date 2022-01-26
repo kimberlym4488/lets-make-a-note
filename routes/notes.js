@@ -1,20 +1,16 @@
 const notes = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
-const { writeToFile, readAndAppend } = require('../db/fsUtils.js')
-const fs = require('fs');
-const util = require('util');
+const { writeToFile, readAndAppend, readFromFile } = require('../db/fsUtils.js')
 const dbNotes = require("../db/db.json")
-const { append } = require('express/lib/response');
 
-const readFromFile = util.promisify(fs.readFile);
-
-notes.get('/', (req, res) =>
-
+notes.get('/', (req, res) => {
+console.info(`${req.method} request received to get notes inside notes.js`);
     readFromFile('db/db.json', 'utf8').then((data) => res.json(JSON.parse(data)))
-);
+
+});
 
 notes.post('/', (req, res) => {
-
+    console.info(`${req.method} request received to post a note`);
     const { title, text } = req.body;
     //makes sure note only is saved if it has content in title and text
     if (title && text) {
@@ -38,7 +34,8 @@ notes.post('/', (req, res) => {
             body: newNote,
         }
 
-        res.json(response);
+       return res.json(response);
+        console.log(newNote)
     }
     else {
         res.json('There was in error in posting your note');
@@ -47,25 +44,31 @@ notes.post('/', (req, res) => {
 })
 
 notes.delete('/:id', (req, res) => {
-
+//id is retrieved from the paramater method folling the /notes.
     const requestedID = req.params.id;
+    //empty array to store the new notes we want to pass through to db.json after seeing if the requestedID matches a current id in the db.json file
     const updatedNotes = []
 
-
+//loop through each id in our current db.json file and see if it matches the delete id the user clicked on. If it doesn't match, pass the note through to the db.json file.
     for (let i = 0; i < dbNotes.length; i++) {
         const dbId = dbNotes[i].id
-        console.log(dbId)
         if (requestedID !== dbId) {
             updatedNotes.push(dbNotes[i]);
         }
     }
 
-    writeToFile(fs.)
-res.json(updatedNotes);
-return 
+    //check to make sure our updated notes array only includes the notes that don't match the deleted id the user clicked on. 
+    
+   console.log(updatedNotes)//working properly. This should overwrite what is currently in the db.json.
+    writeToFile( updatedNotes, 'db/db.json' )
+    const response = {
+        status: 'success',
+        body: updatedNotes,
+      };
+  
+    return  res.json(response);
 
-})
-
+    })
 
 module.exports = notes
 
