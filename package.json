@@ -4,7 +4,7 @@
   "description": "note-taker",
   "main": "server.js",
   "scripts": {
-      "start": "node app"
+      "start": "node server.js"
   },
   "author": "Kmoran",
   "license": "MIT",
