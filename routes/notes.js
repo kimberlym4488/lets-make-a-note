@@ -1,14 +1,17 @@
+//file contains our get, post, and delete routes. Imports and requires here make it happen!
 const notes = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
 const { writeToFile, readAndAppend, readFromFile } = require('../db/fsUtils.js')
 const dbNotes = require("../db/db.json")
-
+const fs = require('fs')
+const path = require('path');
+//get request at api/notes. See routes/index.js for original route naming.
 notes.get('/', (req, res) => {
-console.info(`${req.method} request received to get notes inside notes.js`);
-    readFromFile('db/db.json', 'utf8').then((data) => res.json(JSON.parse(data)))
-
+    console.info(`${req.method} request received for notes`);
+    readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
 });
 
+//post request so we can write new notes!
 notes.post('/', (req, res) => {
     console.info(`${req.method} request received to post a note`);
     const { title, text } = req.body;
@@ -20,56 +23,44 @@ notes.post('/', (req, res) => {
             text,
             id: uuidv4(),
         }
-
         /** 
         *  Function to read data from a given a file and append some content
         *  @param {object} content The content you want to append to the file.
         *  @param {string} file The path to the file you want to save to.
         *  @returns {void} Nothing
         */
+       //calling in readAndAppend from our fs.utils to keep this file clean.
         readAndAppend(newNote, 'db/db.json')
 
         const response = {
             status: 'success',
             body: newNote,
         }
-
-       return res.json(response);
-        console.log(newNote)
+        return res.json(response);
     }
     else {
         res.json('There was in error in posting your note');
     }
-
+})
+//deleting a note. I could also have used the for-loop in place of the filter array method. Had that originally and went with the cleaner method. 
+notes.delete('/:id', (req, res) => {
+    //id is retrieved from the parameter method, in the :id above
+    let requestedID = req.params.id;
+    //here we dynamically grab our existing notes by reading the db.json file. This is better than requiring the existing notes in the beginning, because it's not called on unless the user clicks delete :) 
+    let notesJSON = JSON.parse(fs.readFileSync(path.join(__dirname, "../db/db.json")))
+    //the magic! Filter function takes the id child in each array object and compares it to the id from my parameter. 
+    notesJSON = notesJSON.filter((note) => requestedID !== note.id)
+    //Will filter the array so objects only continue on if their id does NOT match the requestedID from params.
+    console.log(`${req.method} request received to delete.`)
+    //here we write our filtered array back to the db json file. We stringify it back into the proper format
+    fs.writeFileSync('db/db.json',
+        JSON.stringify(notesJSON, null, 4)
+    )
+    //standard - ok message
+    res.sendStatus(200);
 })
 
-notes.delete('/:id', (req, res) => {
-//id is retrieved from the paramater method folling the /notes.
-    const requestedID = req.params.id;
-    //empty array to store the new notes we want to pass through to db.json after seeing if the requestedID matches a current id in the db.json file
-    const updatedNotes = []
-
-//loop through each id in our current db.json file and see if it matches the delete id the user clicked on. If it doesn't match, pass the note through to the db.json file.
-    for (let i = 0; i < dbNotes.length; i++) {
-        const dbId = dbNotes[i].id
-        if (requestedID !== dbId) {
-            updatedNotes.push(dbNotes[i]);
-        }
-    }
-
-    //check to make sure our updated notes array only includes the notes that don't match the deleted id the user clicked on. 
-    
-   console.log(updatedNotes)//working properly. This should overwrite what is currently in the db.json.
-    writeToFile( updatedNotes, 'db/db.json' )
-    const response = {
-        status: 'success',
-        body: updatedNotes,
-      };
-  
-    return  res.json(response);
-
-    })
-
+//export these beautiful routes to my index.js.
 module.exports = notes
 
 

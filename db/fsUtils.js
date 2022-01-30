@@ -1,8 +1,12 @@
+//require the file system to do the writing, reading, and appending functions.
 const fs = require('fs');
+//require util for the promisify function w/readfile
 const util = require('util');
 
+//helper function so we can use the .then
 const readFromFile = util.promisify(fs.readFile);
 
+//write to file, reusable on notes.js. This was giving me issues so I used a separate formula on notes, but keeping this here for future trial and error with this project.
 const writeToFile = (destination, content) =>
   fs.writeFile(destination, JSON.stringify(content, null, 4), (err) =>
     err ? console.error(err) : console.info(`\nData written to ${destination}`)
@@ -22,10 +26,9 @@ const readAndAppend = (content, file) => {
         } else {
             const parsedData = JSON.parse(data);
             parsedData.push(content);
-            console.log(parsedData);
             writeToFile(file, parsedData)
         }
     });
 };
-
+//export all helper functions :)
 module.exports = { writeToFile, readFromFile, readAndAppend }
