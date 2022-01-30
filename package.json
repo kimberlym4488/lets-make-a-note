@@ -4,15 +4,12 @@
   "description": "note-taker",
   "main": "server.js",
   "scripts": {
-      "start": "node server.js"
+      "start": "node app"
   },
   "author": "Kmoran",
   "license": "MIT",
   "dependencies": {
     "express": "^4.16.4",
     "uuidv4": "^6.2.12"
-  },
-  "engines": {
-    "node": "v12.21.0"
   }
 }
